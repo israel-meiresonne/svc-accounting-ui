@@ -9,7 +9,6 @@ import { toast } from "sonner"
 import { ApiError } from "@/lib/api-client"
 import { useAuth } from "@/lib/auth/auth-context"
 import { CURRENCIES, signupSchema, type SignupValues } from "@/lib/auth/schemas"
-import { AuthErrorBanner, AuthEyebrow } from "@/components/auth/auth-form-ui"
 import { Button } from "@/components/ui/button"
 import {
   Form,
@@ -20,6 +19,7 @@ import {
   FormMessage,
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
+import { ErrorBanner, Eyebrow } from "@/components/ui/inline-notice"
 import {
   Select,
   SelectContent,
@@ -94,7 +94,7 @@ const SignupForm = () => {
   return (
     <>
       <div className="flex flex-col gap-3">
-        <AuthEyebrow>$ ./signup.sh</AuthEyebrow>
+        <Eyebrow>$ ./signup.sh</Eyebrow>
         <div>
           <h1 className="text-center text-base">Create your ledger</h1>
           <p className="mt-2 text-center text-sm text-muted-foreground">
@@ -105,7 +105,7 @@ const SignupForm = () => {
 
       <Form {...form}>
         <form onSubmit={form.handleSubmit(handleSubmit)} className="flex flex-col gap-4">
-          {formError !== null ? <AuthErrorBanner>{formError}</AuthErrorBanner> : null}
+          {formError !== null ? <ErrorBanner>{formError}</ErrorBanner> : null}
 
           <div className="grid grid-cols-2 gap-4">
             <FormField

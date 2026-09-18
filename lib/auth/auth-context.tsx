@@ -54,7 +54,7 @@ type UserDto = {
   currency: string
 }
 
-function toUser(dto: UserDto): User {
+export function toUser(dto: UserDto): User {
   return {
     code: dto.code,
     firstName: dto.first_name,
@@ -111,6 +111,14 @@ type AuthContextValue = {
   login: (values: LoginValues) => Promise<void>
   signup: (values: SignupValues) => Promise<void>
   logout: () => void
+  /**
+   * Writes a freshly-returned `User` straight into the `/users/me` query
+   * cache. Phase 5's `useUpdateCurrency` (`lib/accounts/use-update-currency.ts`)
+   * is the first caller: the `PATCH /api/v1/users/me` response already
+   * carries the updated user, so this avoids a redundant refetch just to
+   * learn what the mutation's own response already said.
+   */
+  updateUser: (user: User) => void
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null)
@@ -193,6 +201,10 @@ const AuthProvider = ({ children }: AuthProviderProps) => {
     router.push("/login")
   }
 
+  const updateUser = (user: User) => {
+    queryClient.setQueryData(ME_QUERY_KEY, user)
+  }
+
   const status: AuthStatus =
     token === null
       ? AuthStatus.Unauthenticated
@@ -203,7 +215,9 @@ const AuthProvider = ({ children }: AuthProviderProps) => {
           : AuthStatus.Loading
 
   return (
-    <AuthContext.Provider value={{ user: meQuery.data ?? null, status, login, signup, logout }}>
+    <AuthContext.Provider
+      value={{ user: meQuery.data ?? null, status, login, signup, logout, updateUser }}
+    >
       {children}
     </AuthContext.Provider>
   )

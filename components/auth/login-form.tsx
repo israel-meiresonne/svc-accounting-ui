@@ -9,7 +9,6 @@ import { toast } from "sonner"
 import { ApiError } from "@/lib/api-client"
 import { useAuth } from "@/lib/auth/auth-context"
 import { loginSchema, type LoginValues } from "@/lib/auth/schemas"
-import { AuthErrorBanner, AuthEyebrow } from "@/components/auth/auth-form-ui"
 import { Button } from "@/components/ui/button"
 import {
   Form,
@@ -20,6 +19,7 @@ import {
   FormMessage,
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
+import { ErrorBanner, Eyebrow } from "@/components/ui/inline-notice"
 
 const LoginForm = () => {
   const { login } = useAuth()
@@ -51,7 +51,7 @@ const LoginForm = () => {
   return (
     <>
       <div className="flex flex-col gap-3">
-        <AuthEyebrow>$ ./login.sh</AuthEyebrow>
+        <Eyebrow>$ ./login.sh</Eyebrow>
         <div>
           <h1 className="text-center text-base">Log in to your ledger</h1>
           <p className="mt-2 text-center text-sm text-muted-foreground">
@@ -62,7 +62,7 @@ const LoginForm = () => {
 
       <Form {...form}>
         <form onSubmit={form.handleSubmit(handleSubmit)} className="flex flex-col gap-4">
-          {authError !== null ? <AuthErrorBanner>{authError}</AuthErrorBanner> : null}
+          {authError !== null ? <ErrorBanner>{authError}</ErrorBanner> : null}
 
           <FormField
             control={form.control}
