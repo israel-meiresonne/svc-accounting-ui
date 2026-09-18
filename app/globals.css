@@ -1,0 +1,187 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+/*
+ * Matrix-astro theme tokens, ported from
+ * .claude/discoveries/1-accounting-app-v1/1-specifications/mockups/shared.css
+ * into Shadcn's CSS-variable theme layer. This app has one visual identity
+ * (a dark, green-on-black terminal), so the same palette is used for both
+ * :root and .dark rather than defining a separate light theme.
+ */
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-body);
+  --font-mono: var(--font-body);
+  --font-heading: var(--font-display);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+
+  /* Extra tokens carried over verbatim from shared.css, not part of
+     Shadcn's default set, exposed as Tailwind utilities (e.g. text-warn,
+     bg-accent-soft, border-border-bright) so later phases never hardcode
+     a raw hex/rgba value where one of these already exists. */
+  --color-border-bright: var(--border-bright);
+  --color-text-dim: var(--text-dim);
+  --color-text-bright: var(--text-bright);
+  --color-accent-bright: var(--accent-bright);
+  --color-accent-soft: var(--accent-soft);
+  --color-warn: var(--warn);
+  --color-warn-soft: var(--warn-soft);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+}
+
+:root {
+  --background: #0a0f0b;
+  --foreground: #b9d6c2;
+  --card: #0d140f;
+  --card-foreground: #e6f7ec;
+  --popover: #0d140f;
+  --popover-foreground: #e6f7ec;
+  --primary: #3ddc6e;
+  --primary-foreground: #04160a;
+  --secondary: #0b120d;
+  --secondary-foreground: #b9d6c2;
+  --muted: #0b120d;
+  --muted-foreground: #6f8f7a;
+  --accent: rgba(61, 220, 110, 0.12);
+  --accent-foreground: #e6f7ec;
+  --destructive: #ff6b6b;
+  --destructive-foreground: #e6f7ec;
+  --border: #1c3524;
+  --input: #1c3524;
+  --ring: #7dffab;
+  --chart-1: #3ddc6e;
+  --chart-2: #7dffab;
+  --chart-3: #ffb454;
+  --chart-4: #ff6b6b;
+  --chart-5: #6f8f7a;
+  --radius: 0.125rem;
+  --sidebar: #0b120d;
+  --sidebar-foreground: #b9d6c2;
+  --sidebar-primary: #3ddc6e;
+  --sidebar-primary-foreground: #04160a;
+  --sidebar-accent: rgba(61, 220, 110, 0.12);
+  --sidebar-accent-foreground: #7dffab;
+  --sidebar-border: #2f6b41;
+  --sidebar-ring: #7dffab;
+
+  /* Extra matrix-astro tokens with no direct Shadcn equivalent */
+  --border-bright: #2f6b41;
+  --text-dim: #6f8f7a;
+  --text-bright: #e6f7ec;
+  --accent-bright: #7dffab;
+  --accent-soft: rgba(61, 220, 110, 0.12);
+  --warn: #ffb454;
+  --warn-soft: rgba(255, 180, 84, 0.12);
+  --danger: #ff6b6b;
+  --danger-soft: rgba(255, 107, 107, 0.12);
+  --text-dim-soft: rgba(111, 143, 122, 0.55);
+}
+
+.dark {
+  --background: #0a0f0b;
+  --foreground: #b9d6c2;
+  --card: #0d140f;
+  --card-foreground: #e6f7ec;
+  --popover: #0d140f;
+  --popover-foreground: #e6f7ec;
+  --primary: #3ddc6e;
+  --primary-foreground: #04160a;
+  --secondary: #0b120d;
+  --secondary-foreground: #b9d6c2;
+  --muted: #0b120d;
+  --muted-foreground: #6f8f7a;
+  --accent: rgba(61, 220, 110, 0.12);
+  --accent-foreground: #e6f7ec;
+  --destructive: #ff6b6b;
+  --destructive-foreground: #e6f7ec;
+  --border: #1c3524;
+  --input: #1c3524;
+  --ring: #7dffab;
+  --chart-1: #3ddc6e;
+  --chart-2: #7dffab;
+  --chart-3: #ffb454;
+  --chart-4: #ff6b6b;
+  --chart-5: #6f8f7a;
+  --sidebar: #0b120d;
+  --sidebar-foreground: #b9d6c2;
+  --sidebar-primary: #3ddc6e;
+  --sidebar-primary-foreground: #04160a;
+  --sidebar-accent: rgba(61, 220, 110, 0.12);
+  --sidebar-accent-foreground: #7dffab;
+  --sidebar-border: #2f6b41;
+  --sidebar-ring: #7dffab;
+
+  --border-bright: #2f6b41;
+  --text-dim: #6f8f7a;
+  --text-bright: #e6f7ec;
+  --accent-bright: #7dffab;
+  --accent-soft: rgba(61, 220, 110, 0.12);
+  --warn: #ffb454;
+  --warn-soft: rgba(255, 180, 84, 0.12);
+  --danger: #ff6b6b;
+  --danger-soft: rgba(255, 107, 107, 0.12);
+  --text-dim-soft: rgba(111, 143, 122, 0.55);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  html {
+    @apply font-sans;
+  }
+  h1,
+  h2,
+  h3,
+  h4 {
+    @apply font-heading text-card-foreground;
+    line-height: 1.3;
+  }
+  :focus-visible {
+    outline: 2px solid var(--accent-bright);
+    outline-offset: 2px;
+  }
+}
