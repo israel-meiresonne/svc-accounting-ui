@@ -3,6 +3,7 @@ import { IBM_Plex_Mono, Silkscreen } from "next/font/google";
 
 import { QueryProvider } from "@/lib/query-client";
 import { Toaster } from "@/components/ui/sonner";
+import AuthProvider from "@/lib/auth/auth-context";
 
 import "./globals.css";
 
@@ -31,8 +32,10 @@ const RootLayout = ({ children }: LayoutProps<"/">) => {
     >
       <body className="min-h-full flex flex-col">
         <QueryProvider>
-          {children}
-          <Toaster />
+          <AuthProvider>
+            {children}
+            <Toaster />
+          </AuthProvider>
         </QueryProvider>
       </body>
     </html>

@@ -1,16 +1,29 @@
-import AppShell from "@/components/layout/app-shell"
+"use client"
+
+import { useEffect } from "react"
+import { useRouter } from "next/navigation"
+
+import { AuthStatus, useAuth } from "@/lib/auth/auth-context"
 
 const Home = () => {
-  return (
-    <AppShell>
-      <div className="p-8">
-        <h1 className="text-lg">LEDGR_OS</h1>
-        <p className="mt-2 text-sm text-muted-foreground">
-          Placeholder root page. Phase 4 replaces this with a redirect to /login or /accounts.
-        </p>
-      </div>
-    </AppShell>
-  )
+  const { status } = useAuth()
+  const router = useRouter()
+
+  // Two branches over a three-value status, used nowhere else in the app
+  // — not worth extracting into its own hook/helper for a single call
+  // site this small.
+  useEffect(() => {
+    if (status === AuthStatus.Authenticated) {
+      router.replace("/accounts")
+      return
+    }
+
+    if (status === AuthStatus.Unauthenticated) {
+      router.replace("/login")
+    }
+  }, [status, router])
+
+  return null
 }
 
 export default Home

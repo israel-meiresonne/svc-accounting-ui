@@ -185,3 +185,27 @@
     outline-offset: 2px;
   }
 }
+
+/*
+ * Ported from the mockup's shared.css `@media (prefers-reduced-motion:
+ * reduce)` block, which this theme's Phase 2 port otherwise dropped
+ * entirely — neutralizes the logo cursor's `animate-pulse` (and any
+ * other animation) and collapses transitions/animations to effectively
+ * instant for anyone who has asked the OS to reduce motion.
+ */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  .animate-pulse {
+    animation: none;
+    opacity: 1;
+  }
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.001ms !important;
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
