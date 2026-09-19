@@ -1,12 +1,24 @@
 import { render, screen } from "@testing-library/react"
+import userEvent from "@testing-library/user-event"
 
+import { useAuth } from "@/lib/auth/auth-context"
 import AppShell from "@/components/layout/app-shell"
 
 jest.mock("next/navigation", () => ({
   usePathname: () => "/statistics",
 }))
 
+jest.mock("@/lib/auth/auth-context", () => ({
+  useAuth: jest.fn(),
+}))
+
+const mockedUseAuth = useAuth as jest.Mock
+
 describe("<AppShell />", () => {
+  beforeEach(() => {
+    mockedUseAuth.mockReturnValue({ logout: jest.fn() })
+  })
+
   it("renders all three primary nav links in the sidebar", () => {
     render(<AppShell>content</AppShell>)
 
@@ -31,5 +43,16 @@ describe("<AppShell />", () => {
     )
 
     expect(screen.getByText("Page content")).toBeInTheDocument()
+  })
+
+  it("calls useAuth().logout when the log out button is clicked", async () => {
+    const logout = jest.fn()
+    mockedUseAuth.mockReturnValue({ logout })
+    const user = userEvent.setup()
+
+    render(<AppShell>content</AppShell>)
+    await user.click(screen.getByRole("button", { name: /log out/i }))
+
+    expect(logout).toHaveBeenCalledTimes(1)
   })
 })

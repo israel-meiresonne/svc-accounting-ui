@@ -3,6 +3,8 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 
+import { useAuth } from "@/lib/auth/auth-context"
+import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 
 const NAV_LINKS = [
@@ -19,6 +21,7 @@ function isActiveRoute(pathname: string | null, href: string): boolean {
 
 const Sidebar = () => {
   const pathname = usePathname()
+  const { logout } = useAuth()
 
   return (
     <nav aria-label="Primary" className="flex h-full w-60 flex-none flex-col border-r border-sidebar-border bg-sidebar">
@@ -47,6 +50,16 @@ const Sidebar = () => {
           )
         })}
       </ul>
+      <div className="border-t border-sidebar-border p-3">
+        <Button
+          type="button"
+          variant="ghost"
+          className="w-full justify-start uppercase text-sidebar-foreground/70"
+          onClick={logout}
+        >
+          Log out
+        </Button>
+      </div>
     </nav>
   )
 }

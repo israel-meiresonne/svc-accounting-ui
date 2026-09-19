@@ -188,10 +188,12 @@ const AuthProvider = ({ children }: AuthProviderProps) => {
 
   const login = async (values: LoginValues) => {
     applyAuthResponse(await loginMutation.mutateAsync(values))
+    router.push("/accounts")
   }
 
   const signup = async (values: SignupValues) => {
     applyAuthResponse(await signupMutation.mutateAsync(values))
+    router.push("/accounts")
   }
 
   const logout = () => {
