@@ -16,9 +16,12 @@ Create `.env.local`:
 
 ```bash
 NEXT_PUBLIC_API_URL=http://localhost:3000
+PORT=3001
 ```
 
 `NEXT_PUBLIC_API_URL` is the backend's origin. Every request goes to `${NEXT_PUBLIC_API_URL}/api/v1/...` (`lib/api-client.ts`). Leave it unset and requests fall back to a relative `/api/v1/...` path, which only works when this app and the API share an origin.
+
+`PORT` is this app's own dev/start server port. It defaults to 3000, the same as the backend's default, so set it to something else (3001 here) whenever both apps run locally at once — `svc-accounting`'s CORS config reads this same value via its own `FRONTEND_PORT` env var to allow this origin.
 
 Start the dev server:
 
@@ -26,7 +29,7 @@ Start the dev server:
 npm run dev
 ```
 
-The app now runs on [http://localhost:3000](http://localhost:3000). If the backend also defaults to port 3000, run one of the two on a different port and update `NEXT_PUBLIC_API_URL` to match.
+The app now runs on [http://localhost:3001](http://localhost:3001).
 
 ## Testing and linting
 
