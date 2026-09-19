@@ -1,7 +1,8 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { useMutation, useQuery, useQueryClient, type QueryClient } from "@tanstack/react-query"
 
+import { ACCOUNTS_QUERY_KEY, type Money } from "@/lib/accounts/use-accounts"
 import { apiClient } from "@/lib/api-client"
-import type { BulkUpdateAttributes } from "@/lib/transactions/schemas"
+import type { BulkUpdateAttributes, TransactionPayload } from "@/lib/transactions/schemas"
 
 /**
  * Wire (DTO) shapes matching `TransactionSerializer` exactly — snake_case
@@ -200,6 +201,174 @@ export function useTransactions(filters: TransactionFilters, sort: TransactionSo
   }
 }
 
+// ---- Single-transaction create / edit -------------------------------------
+
+type TransactionResponseDto = {
+  transaction: TransactionDto
+}
+
+/**
+ * Every cache a single-transaction write invalidates.
+ *
+ * `[TRANSACTIONS_QUERY_KEY]` covers both caches this phase's spec names
+ * separately: TanStack Query matches a query key by prefix, and both the
+ * shared list key (`['transactions', filters, sort, page]`) and the stats
+ * key (`['transactions', 'stats', accountCode, from, to]`) start with it.
+ * `ACCOUNTS_QUERY_KEY` is the third: writing a transaction changes the
+ * owning account's balance, which Phase 5's Accounts page reads.
+ */
+function invalidateAfterTransactionWrite(queryClient: QueryClient): void {
+  queryClient.invalidateQueries({ queryKey: [TRANSACTIONS_QUERY_KEY] })
+  queryClient.invalidateQueries({ queryKey: ACCOUNTS_QUERY_KEY })
+}
+
+/** `POST /api/v1/transactions`. */
+export function useCreateTransaction() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (payload: TransactionPayload) => {
+      const response = await apiClient.post<TransactionResponseDto>("/transactions", payload)
+      return toTransaction(response.data.transaction)
+    },
+    onSuccess: () => {
+      invalidateAfterTransactionWrite(queryClient)
+    },
+  })
+}
+
+type UpdateTransactionPayload = {
+  code: string
+  payload: TransactionPayload
+}
+
+/** `PATCH /api/v1/transactions/:code`. */
+export function useUpdateTransaction() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async ({ code, payload }: UpdateTransactionPayload) => {
+      const response = await apiClient.patch<TransactionResponseDto>(`/transactions/${code}`, payload)
+      return toTransaction(response.data.transaction)
+    },
+    onSuccess: () => {
+      invalidateAfterTransactionWrite(queryClient)
+    },
+  })
+}
+
+// ---- Account stats --------------------------------------------------------
+
+type TransactionStatsDto = {
+  total_income: Money
+  total_expenses: Money
+  net_balance: Money
+}
+
+export type TransactionStats = {
+  totalIncome: Money
+  totalExpenses: Money
+  netBalance: Money
+}
+
+function toTransactionStats(dto: TransactionStatsDto): TransactionStats {
+  return {
+    totalIncome: dto.total_income,
+    totalExpenses: dto.total_expenses,
+    netBalance: dto.net_balance,
+  }
+}
+
+/**
+ * Only reached before the first response resolves; the account page
+ * renders a loading state over that window rather than these zeros, the
+ * same `ZERO_SUMMARY`/`EMPTY_TRANSACTIONS` shape the rest of this
+ * codebase's hooks already use instead of handing callers a `null`.
+ */
+const ZERO_STATS: TransactionStats = {
+  totalIncome: { amount: "0", currency: "usd" },
+  totalExpenses: { amount: "0", currency: "usd" },
+  netBalance: { amount: "0", currency: "usd" },
+}
+
+/**
+ * `GET /api/v1/transactions/stats`. `from`/`to` are part of the cache key,
+ * not just `accountCode`, so switching intervals can never serve a stats
+ * response that was cached under a different date range.
+ */
+export function useTransactionStats(accountCode: string, from: string, to: string) {
+  const query = useQuery({
+    queryKey: [TRANSACTIONS_QUERY_KEY, "stats", accountCode, from, to],
+    queryFn: async () => {
+      const response = await apiClient.get<TransactionStatsDto>("/transactions/stats", {
+        params: { account_code: accountCode, from, to },
+      })
+      return toTransactionStats(response.data)
+    },
+  })
+
+  return {
+    stats: query.data ?? ZERO_STATS,
+    isLoading: query.isLoading,
+    isError: query.isError,
+  }
+}
+
+// ---- Counterparty search --------------------------------------------------
+
+type CounterpartySearchResultDto = {
+  code: string
+  display_name: string
+  image: string | null
+}
+
+type CounterpartiesResponseDto = {
+  counterparties: CounterpartySearchResultDto[]
+}
+
+/**
+ * A counterparty as the picker's result list needs it. `image` is
+ * deliberately dropped from the app-facing shape: the backend always
+ * sends `null` for it in v1 (nothing in this discovery sets a `User`'s
+ * image), so nothing downstream should be written as though it might not.
+ */
+export type CounterpartySearchResult = {
+  code: string
+  displayName: string
+}
+
+const EMPTY_COUNTERPARTIES: CounterpartySearchResult[] = []
+
+/**
+ * `GET /api/v1/users/counterparties`. Disabled for an empty query, since
+ * the endpoint exists to narrow a search, not to enumerate every
+ * counterparty a user has ever transacted with.
+ */
+export function useCounterpartySearch(query: string) {
+  const trimmedQuery = query.trim()
+
+  const result = useQuery({
+    queryKey: ["users", "counterparties", trimmedQuery],
+    queryFn: async () => {
+      const response = await apiClient.get<CounterpartiesResponseDto>("/users/counterparties", {
+        params: { q: trimmedQuery },
+      })
+
+      return response.data.counterparties.map((dto) => ({
+        code: dto.code,
+        displayName: dto.display_name,
+      }))
+    },
+    enabled: trimmedQuery !== "",
+  })
+
+  return {
+    counterparties: result.data ?? EMPTY_COUNTERPARTIES,
+    isLoading: result.isLoading && trimmedQuery !== "",
+    isError: result.isError,
+  }
+}
+
 type BulkUpdatePayload = {
   transactionCodes: string[]
   attributes: BulkUpdateAttributes
@@ -241,7 +410,7 @@ export function useBulkDeleteTransactions() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [TRANSACTIONS_QUERY_KEY] })
-      queryClient.invalidateQueries({ queryKey: ["accounts"] })
+      queryClient.invalidateQueries({ queryKey: ACCOUNTS_QUERY_KEY })
     },
   })
 }
@@ -269,7 +438,7 @@ export function useMoveTransactions() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [TRANSACTIONS_QUERY_KEY] })
-      queryClient.invalidateQueries({ queryKey: ["accounts"] })
+      queryClient.invalidateQueries({ queryKey: ACCOUNTS_QUERY_KEY })
     },
   })
 }

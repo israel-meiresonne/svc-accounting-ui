@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import Link from "next/link"
 
 import { formatMoney } from "@/lib/money"
 import type { Account } from "@/lib/accounts/use-accounts"
@@ -22,16 +23,18 @@ const AccountCard = ({ account }: AccountCardProps) => {
     <>
       <Card className="border border-border transition-colors hover:border-border-bright">
         <CardContent className="flex flex-col gap-4">
-          <div className="flex items-center justify-between gap-2">
-            <span className="text-sm text-card-foreground">{account.name}</span>
-            <Badge variant="outline" className="uppercase tracking-wide">
-              {account.currency}
-            </Badge>
-          </div>
+          <Link href={`/accounts/${account.code}`} className="flex flex-col gap-4">
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-sm text-card-foreground">{account.name}</span>
+              <Badge variant="outline" className="uppercase tracking-wide">
+                {account.currency}
+              </Badge>
+            </div>
 
-          <p className="font-heading text-xl text-card-foreground">
-            {formatMoney(account.balance.amount, account.balance.currency)}
-          </p>
+            <p className="font-heading text-xl text-card-foreground">
+              {formatMoney(account.balance.amount, account.balance.currency)}
+            </p>
+          </Link>
 
           <div className="flex gap-2">
             <Button

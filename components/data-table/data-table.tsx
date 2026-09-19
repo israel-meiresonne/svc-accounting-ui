@@ -49,6 +49,13 @@ type DataTableProps<TData> = {
   manualPagination?: boolean
   /** Required when `manualPagination` is set, since the table can no longer derive it from `data.length`. */
   pageCount?: number
+  /**
+   * Makes each row activatable (Phase 6's account table opens the edit
+   * modal this way). Omitted, rows stay plain, non-interactive markup —
+   * which is why the row only gets button semantics when a handler is
+   * actually passed, rather than always announcing itself as clickable.
+   */
+  onRowClick?: (row: TData) => void
 }
 
 /**
@@ -71,6 +78,7 @@ function DataTable<TData>({
   onPaginationChange,
   manualPagination = false,
   pageCount,
+  onRowClick,
 }: DataTableProps<TData>) {
   const [internalRowSelection, setInternalRowSelection] = useState<RowSelectionState>({})
   const [internalSorting, setInternalSorting] = useState<SortingState>([])
@@ -115,7 +123,24 @@ function DataTable<TData>({
           <TableBody>
             {table.getRowModel().rows.length ? (
               table.getRowModel().rows.map((row) => (
-                <TableRow key={row.id} data-state={row.getIsSelected() ? "selected" : undefined}>
+                <TableRow
+                  key={row.id}
+                  data-state={row.getIsSelected() ? "selected" : undefined}
+                  role={onRowClick ? "button" : undefined}
+                  tabIndex={onRowClick ? 0 : undefined}
+                  className={onRowClick ? "cursor-pointer" : undefined}
+                  onClick={onRowClick ? () => onRowClick(row.original) : undefined}
+                  onKeyDown={
+                    onRowClick
+                      ? (event) => {
+                          if (event.key !== "Enter" && event.key !== " ") return
+
+                          event.preventDefault()
+                          onRowClick(row.original)
+                        }
+                      : undefined
+                  }
+                >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</TableCell>
                   ))}

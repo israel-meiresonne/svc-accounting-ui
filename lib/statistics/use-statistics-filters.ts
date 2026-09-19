@@ -1,45 +1,15 @@
 "use client"
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
-import { format, parseISO } from "date-fns"
 
-import type { Interval } from "@/lib/intervals"
+import { intervalToSearchParams, parseIntervalParams, type Interval } from "@/lib/intervals"
 import { isPaymentMethod, type PaymentMethodValue } from "@/lib/transactions/schemas"
-
-const PERIODIC_INTERVAL_KINDS = ["month", "week", "last7days", "year", "trailingYear"] as const
-type PeriodicIntervalKind = (typeof PERIODIC_INTERVAL_KINDS)[number]
 
 export type StatisticsFilters = {
   accountCodes: string[]
   category: string | null
   paymentMethod: PaymentMethodValue | null
   interval: Interval
-}
-
-function isPeriodicIntervalKind(value: string): value is PeriodicIntervalKind {
-  return (PERIODIC_INTERVAL_KINDS as readonly string[]).includes(value)
-}
-
-function parseInterval(searchParams: URLSearchParams): Interval {
-  const kind = searchParams.get("interval")
-
-  if (kind === "custom") {
-    const from = searchParams.get("from")
-    const to = searchParams.get("to")
-
-    if (from && to) {
-      return { kind: "custom", from: parseISO(from), to: parseISO(to) }
-    }
-
-    // An incomplete "custom" URL (no explicit range yet) falls back to
-    // a sane default rather than crashing on it.
-    return { kind: "month", offset: 0 }
-  }
-
-  const offsetParam = Number(searchParams.get("offset") ?? "0")
-  const offset = Number.isFinite(offsetParam) ? offsetParam : 0
-
-  return { kind: kind !== null && isPeriodicIntervalKind(kind) ? kind : "month", offset }
 }
 
 export function parseStatisticsFilters(searchParams: URLSearchParams): StatisticsFilters {
@@ -51,25 +21,16 @@ export function parseStatisticsFilters(searchParams: URLSearchParams): Statistic
     accountCodes: accountsParam ? accountsParam.split(",").filter((code) => code.length > 0) : [],
     category: categoryParam && categoryParam.length > 0 ? categoryParam : null,
     paymentMethod: paymentMethodParam !== null && isPaymentMethod(paymentMethodParam) ? paymentMethodParam : null,
-    interval: parseInterval(searchParams),
+    interval: parseIntervalParams(searchParams),
   }
 }
 
 export function statisticsFiltersToSearchParams(filters: StatisticsFilters): URLSearchParams {
-  const params = new URLSearchParams()
+  const params = intervalToSearchParams(filters.interval)
 
   if (filters.accountCodes.length > 0) params.set("accounts", filters.accountCodes.join(","))
   if (filters.category) params.set("category", filters.category)
   if (filters.paymentMethod) params.set("payment_method", filters.paymentMethod)
-
-  params.set("interval", filters.interval.kind)
-
-  if (filters.interval.kind === "custom") {
-    params.set("from", format(filters.interval.from, "yyyy-MM-dd"))
-    params.set("to", format(filters.interval.to, "yyyy-MM-dd"))
-  } else if (filters.interval.offset !== 0) {
-    params.set("offset", String(filters.interval.offset))
-  }
 
   return params
 }

@@ -4,15 +4,10 @@ import { format } from "date-fns"
 import type { ColumnDef } from "@tanstack/react-table"
 
 import { formatMoney } from "@/lib/money"
-import { PAYMENT_METHOD_LABELS, isPaymentMethod } from "@/lib/transactions/schemas"
+import { paymentMethodLabel } from "@/lib/transactions/schemas"
 import type { Transaction } from "@/lib/transactions/queries"
 import { Checkbox } from "@/components/ui/checkbox"
 import DataTableColumnHeader from "@/components/data-table/data-table-column-header"
-
-function paymentMethodLabel(paymentMethod: string): string {
-  if (!isPaymentMethod(paymentMethod)) return paymentMethod
-  return PAYMENT_METHOD_LABELS[paymentMethod]
-}
 
 /**
  * Column ids for the four sortable columns are set to the exact strings
