@@ -133,4 +133,28 @@ describe("<CsvImportDialog />", () => {
     const importButton = await screen.findByRole("button", { name: /import_.*transactions/i })
     expect(importButton).not.toBeDisabled()
   })
+
+  it("lets the preview step shrink below its content's width, so a wide table scrolls inside the dialog instead of forcing the dialog wider", async () => {
+    mockedUsePreviewCsvImport.mockReturnValue({
+      mutateAsync: jest.fn().mockResolvedValue([previewRowFixture({})]),
+    })
+
+    const user = userEvent.setup()
+    render(<CsvImportDialog open onOpenChange={jest.fn()} />)
+
+    await selectFile(user)
+    await user.click(await screen.findByRole("button", { name: /continue/i }))
+
+    const table = await screen.findByRole("table")
+    const dialogContent = document.querySelector('[data-slot="dialog-content"]')
+    const previewStepWrapper = Array.from(dialogContent?.children ?? []).find((child) =>
+      child.contains(table)
+    )
+
+    // `DialogContent` is a CSS grid container, whose direct children default to
+    // `min-width: auto` and refuse to shrink below their content's intrinsic
+    // width — without this, a wide table forces the whole dialog wider instead
+    // of scrolling within its own `overflow-x-auto` container.
+    expect(previewStepWrapper).toHaveClass("min-w-0")
+  })
 })

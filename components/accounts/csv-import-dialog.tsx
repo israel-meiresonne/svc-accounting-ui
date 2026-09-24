@@ -232,7 +232,7 @@ const CsvImportDialog = ({ open, onOpenChange }: CsvImportDialogProps) => {
         ) : null}
 
         {step === ImportStep.Preview ? (
-          <div className="flex flex-col gap-4">
+          <div className="flex min-w-0 flex-col gap-4">
             <CsvPreviewTable previewRows={previewRows} />
 
             {groupIds.map((groupId) => (
