@@ -14,7 +14,7 @@ export type LoginValues = z.infer<typeof loginSchema>
  * choice, not a backend-enforced enum — it's the set the app's own
  * mockups (accounts/transactions/statistics) actually exercise.
  */
-export const CURRENCIES = ["usd", "eur", "gbp"] as const
+export const CURRENCIES = ["usd", "eur", "gbp", "pln"] as const
 
 export const signupSchema = z
   .object({

@@ -8,7 +8,7 @@ import { z } from "zod"
  * shared module on its own (per `code-style-frontend-react-next`'s
  * project-structure guidance on cross-feature imports).
  */
-export const CURRENCIES = ["usd", "eur", "gbp"] as const
+export const CURRENCIES = ["usd", "eur", "gbp", "pln"] as const
 
 /**
  * Which of the two opening-balance entry modes `AccountFormDialog`'s
