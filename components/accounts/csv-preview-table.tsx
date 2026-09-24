@@ -34,35 +34,37 @@ type CsvPreviewTableProps = {
  */
 const CsvPreviewTable = ({ previewRows }: CsvPreviewTableProps) => {
   return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead>Date</TableHead>
-          <TableHead>Amount</TableHead>
-          <TableHead>Currency</TableHead>
-          <TableHead>Category</TableHead>
-          <TableHead>Description</TableHead>
-          <TableHead>Counterparty</TableHead>
-          <TableHead>Status</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {previewRows.map((previewRow, index) => (
-          <TableRow
-            key={`${previewRow.row.occurred_at}-${index}`}
-            className={cn(rowClassName(previewRow.status))}
-          >
-            <TableCell>{previewRow.row.occurred_at}</TableCell>
-            <TableCell>{previewRow.row.amount}</TableCell>
-            <TableCell>{previewRow.row.currency.toUpperCase()}</TableCell>
-            <TableCell>{previewRow.row.category}</TableCell>
-            <TableCell>{previewRow.row.description}</TableCell>
-            <TableCell>{counterpartyName(previewRow.row)}</TableCell>
-            <TableCell className="uppercase">{previewRow.status}</TableCell>
+    <div className="max-h-[50vh] overflow-y-auto rounded-[3px] border border-border">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Date</TableHead>
+            <TableHead>Amount</TableHead>
+            <TableHead>Currency</TableHead>
+            <TableHead>Category</TableHead>
+            <TableHead>Description</TableHead>
+            <TableHead>Counterparty</TableHead>
+            <TableHead>Status</TableHead>
           </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+        </TableHeader>
+        <TableBody>
+          {previewRows.map((previewRow, index) => (
+            <TableRow
+              key={`${previewRow.row.occurred_at}-${index}`}
+              className={cn(rowClassName(previewRow.status))}
+            >
+              <TableCell>{previewRow.row.occurred_at}</TableCell>
+              <TableCell>{previewRow.row.amount}</TableCell>
+              <TableCell>{previewRow.row.currency.toUpperCase()}</TableCell>
+              <TableCell>{previewRow.row.category}</TableCell>
+              <TableCell>{previewRow.row.description}</TableCell>
+              <TableCell>{counterpartyName(previewRow.row)}</TableCell>
+              <TableCell className="uppercase">{previewRow.status}</TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
   )
 }
 
