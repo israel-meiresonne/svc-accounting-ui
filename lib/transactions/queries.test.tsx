@@ -43,14 +43,14 @@ describe("useTransactionStats", () => {
   })
 
   it("requests /transactions/stats with the account code and the interval's range, mapped to the app-facing shape", async () => {
-    const { result } = renderHook(() => useTransactionStats(ACCOUNT_CODE, FROM, TO), {
+    const { result } = renderHook(() => useTransactionStats(ACCOUNT_CODE, FROM, TO, []), {
       wrapper: createWrapper(),
     })
 
     await waitFor(() => expect(result.current.isLoading).toBe(false))
 
     expect(mockedGet).toHaveBeenCalledWith("/transactions/stats", {
-      params: { account_code: ACCOUNT_CODE, from: FROM, to: TO },
+      params: { account_code: ACCOUNT_CODE, from: FROM, to: TO, included_categories: undefined },
     })
     expect(result.current.stats).toEqual({
       totalIncome: { amount: "1200.00", currency: "eur" },
@@ -61,7 +61,7 @@ describe("useTransactionStats", () => {
 
   it("refetches under a new cache key when from/to change, but not on an unrelated re-render", async () => {
     const { result, rerender } = renderHook(
-      ({ from, to }: { from: string; to: string }) => useTransactionStats(ACCOUNT_CODE, from, to),
+      ({ from, to }: { from: string; to: string }) => useTransactionStats(ACCOUNT_CODE, from, to, []),
       { wrapper: createWrapper(), initialProps: { from: FROM, to: TO } }
     )
 
@@ -84,12 +84,33 @@ describe("useTransactionStats", () => {
         account_code: ACCOUNT_CODE,
         from: "2026-04-01T00:00:00.000Z",
         to: "2026-04-30T23:59:59.999Z",
+        included_categories: undefined,
       },
     })
   })
 
+  it("sends the included categories as a plain array and refetches when the selection changes", async () => {
+    const { result, rerender } = renderHook(
+      ({ includedCategories }: { includedCategories: string[] }) =>
+        useTransactionStats(ACCOUNT_CODE, FROM, TO, includedCategories),
+      { wrapper: createWrapper(), initialProps: { includedCategories: ["Rent"] } }
+    )
+
+    await waitFor(() => expect(result.current.isLoading).toBe(false))
+    expect(mockedGet).toHaveBeenLastCalledWith("/transactions/stats", {
+      params: { account_code: ACCOUNT_CODE, from: FROM, to: TO, included_categories: ["Rent"] },
+    })
+
+    rerender({ includedCategories: ["Rent", "Fees"] })
+
+    await waitFor(() => expect(mockedGet).toHaveBeenCalledTimes(2))
+    expect(mockedGet).toHaveBeenLastCalledWith("/transactions/stats", {
+      params: { account_code: ACCOUNT_CODE, from: FROM, to: TO, included_categories: ["Rent", "Fees"] },
+    })
+  })
+
   it("hands callers zero-valued stats before the first response resolves, never null", () => {
-    const { result } = renderHook(() => useTransactionStats(ACCOUNT_CODE, FROM, TO), {
+    const { result } = renderHook(() => useTransactionStats(ACCOUNT_CODE, FROM, TO, []), {
       wrapper: createWrapper(),
     })
 

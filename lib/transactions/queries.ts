@@ -125,14 +125,14 @@ export type TransactionSort = {
  * caller. The phase spec's hooks table names this hook's first
  * parameter "filters"; the date range is folded into that same object
  * (rather than becoming a fourth `useTransactions` parameter) since it's
- * exactly as filter-shaped as `accountCodes`/`category`/`paymentMethod`
+ * exactly as filter-shaped as `accountCodes`/`includedCategories`/`paymentMethod`
  * and must vary the cache key the same way they do.
  */
 export type TransactionFilters = {
   from: string
   to: string
   accountCodes: string[]
-  category: string
+  includedCategories: string[]
   paymentMethod: string
 }
 
@@ -159,9 +159,9 @@ function buildTransactionsParams(
   filters.accountCodes.forEach((accountCode) => {
     params.append("filter[account_codes][]", accountCode)
   })
-  if (filters.category.trim() !== "") {
-    params.set("filter[category]", filters.category)
-  }
+  filters.includedCategories.forEach((category) => {
+    params.append("filter[included_categories][]", category)
+  })
   if (filters.paymentMethod.trim() !== "") {
     params.set("filter[payment_method]", filters.paymentMethod)
   }
@@ -292,16 +292,22 @@ const ZERO_STATS: TransactionStats = {
 }
 
 /**
- * `GET /api/v1/transactions/stats`. `from`/`to` are part of the cache key,
- * not just `accountCode`, so switching intervals can never serve a stats
- * response that was cached under a different date range.
+ * `GET /api/v1/transactions/stats`. `from`/`to` and `includedCategories`
+ * are part of the cache key, not just `accountCode`, so switching
+ * intervals or categories can never serve a stats response that was
+ * cached under a different range or selection.
  */
-export function useTransactionStats(accountCode: string, from: string, to: string) {
+export function useTransactionStats(accountCode: string, from: string, to: string, includedCategories: string[]) {
   const query = useQuery({
-    queryKey: [TRANSACTIONS_QUERY_KEY, "stats", accountCode, from, to],
+    queryKey: [TRANSACTIONS_QUERY_KEY, "stats", accountCode, from, to, includedCategories],
     queryFn: async () => {
       const response = await apiClient.get<TransactionStatsDto>("/transactions/stats", {
-        params: { account_code: accountCode, from, to },
+        params: {
+          account_code: accountCode,
+          from,
+          to,
+          included_categories: includedCategories.length > 0 ? includedCategories : undefined,
+        },
       })
       return toTransactionStats(response.data)
     },
