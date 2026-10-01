@@ -4,6 +4,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query"
 
 import { apiClient } from "@/lib/api-client"
 import { ACCOUNTS_QUERY_KEY } from "@/lib/accounts/use-accounts"
+import { CATEGORIES_QUERY_KEY } from "@/lib/categories/use-categories"
 
 export const CounterpartyType = {
   Contact: "contact",
@@ -128,8 +129,10 @@ export function useCommitCsvImport() {
       return response.data.imported_count
     },
     onSuccess: () => {
-      // Balances changed for every touched account.
+      // Balances changed for every touched account, and the import may
+      // have introduced categories the filters should now offer.
       queryClient.invalidateQueries({ queryKey: ACCOUNTS_QUERY_KEY })
+      queryClient.invalidateQueries({ queryKey: CATEGORIES_QUERY_KEY })
     },
   })
 }

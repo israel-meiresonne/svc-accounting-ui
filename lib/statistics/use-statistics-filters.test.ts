@@ -11,18 +11,18 @@ describe("parseStatisticsFilters", () => {
     const filters = parseStatisticsFilters(new URLSearchParams())
 
     expect(filters.accountCodes).toEqual([])
-    expect(filters.category).toBeNull()
+    expect(filters.includedCategories).toEqual([])
     expect(filters.paymentMethod).toBeNull()
     expect(filters.interval).toEqual({ kind: "month", offset: 0 })
   })
 
-  it("parses accounts, category, and payment method from the URL", () => {
+  it("parses accounts, included categories, and payment method from the URL", () => {
     const filters = parseStatisticsFilters(
-      new URLSearchParams("accounts=acc_1,acc_2&category=rent&payment_method=cash")
+      new URLSearchParams("accounts=acc_1,acc_2&included_categories=rent,fees&payment_method=cash")
     )
 
     expect(filters.accountCodes).toEqual(["acc_1", "acc_2"])
-    expect(filters.category).toBe("rent")
+    expect(filters.includedCategories).toEqual(["rent", "fees"])
     expect(filters.paymentMethod).toBe("cash")
   })
 
@@ -64,31 +64,31 @@ describe("parseStatisticsFilters", () => {
 })
 
 describe("statisticsFiltersToSearchParams", () => {
-  it("omits accounts/category/payment_method/offset when unset", () => {
+  it("omits accounts/included_categories/payment_method/offset when unset", () => {
     const params = statisticsFiltersToSearchParams({
       accountCodes: [],
-      category: null,
+      includedCategories: [],
       paymentMethod: null,
       interval: { kind: "month", offset: 0 },
     })
 
     expect(params.get("accounts")).toBeNull()
-    expect(params.get("category")).toBeNull()
+    expect(params.get("included_categories")).toBeNull()
     expect(params.get("payment_method")).toBeNull()
     expect(params.get("offset")).toBeNull()
     expect(params.get("interval")).toBe("month")
   })
 
-  it("serializes accounts, category, payment method, and a nonzero offset", () => {
+  it("serializes accounts, included categories, payment method, and a nonzero offset", () => {
     const params = statisticsFiltersToSearchParams({
       accountCodes: ["acc_1", "acc_2"],
-      category: "rent",
+      includedCategories: ["rent", "fees"],
       paymentMethod: "cash",
       interval: { kind: "week", offset: -2 },
     })
 
     expect(params.get("accounts")).toBe("acc_1,acc_2")
-    expect(params.get("category")).toBe("rent")
+    expect(params.get("included_categories")).toBe("rent,fees")
     expect(params.get("payment_method")).toBe("cash")
     expect(params.get("interval")).toBe("week")
     expect(params.get("offset")).toBe("-2")
@@ -97,7 +97,7 @@ describe("statisticsFiltersToSearchParams", () => {
   it("serializes a custom interval's from/to instead of an offset", () => {
     const params = statisticsFiltersToSearchParams({
       accountCodes: [],
-      category: null,
+      includedCategories: [],
       paymentMethod: null,
       interval: { kind: "custom", from: new Date(2026, 0, 1), to: new Date(2026, 0, 31) },
     })
@@ -121,7 +121,7 @@ jest.mock("next/navigation", () => ({
 describe("useStatisticsFilters", () => {
   beforeEach(() => {
     mockPush.mockClear()
-    currentSearchParams = new URLSearchParams("interval=month&category=rent")
+    currentSearchParams = new URLSearchParams("interval=month&included_categories=rent")
   })
 
   it("merges a partial update into the current filters and pushes the resulting URL", () => {
@@ -132,7 +132,7 @@ describe("useStatisticsFilters", () => {
     expect(mockPush).toHaveBeenCalledTimes(1)
     const pushedUrl = mockPush.mock.calls[0][0] as string
     expect(pushedUrl.startsWith("/statistics?")).toBe(true)
-    expect(pushedUrl).toContain("category=rent")
+    expect(pushedUrl).toContain("included_categories=rent")
     expect(pushedUrl).toContain("payment_method=cash")
   })
 })

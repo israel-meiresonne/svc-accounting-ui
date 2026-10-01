@@ -100,7 +100,7 @@ function statisticsParams(filters: StatisticsFilters) {
     from: format(from, "yyyy-MM-dd"),
     to: format(to, "yyyy-MM-dd"),
     account_codes: filters.accountCodes.length > 0 ? filters.accountCodes : undefined,
-    category: filters.category ?? undefined,
+    included_categories: filters.includedCategories.length > 0 ? filters.includedCategories : undefined,
     payment_method: filters.paymentMethod ?? undefined,
   }
 }

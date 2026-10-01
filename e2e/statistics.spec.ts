@@ -179,8 +179,8 @@ test.describe("statistics", () => {
     const filteredResponsePromise = page.waitForResponse(
       (response) => response.url().includes("/api/v1/statistics") && response.request().method() === "GET"
     )
-    await page.getByLabel("Filter by category").fill(groceriesCategory)
-    await page.getByLabel("Filter by category").press("Enter")
+    await page.getByRole("button", { name: "All categories" }).click()
+    await page.getByRole("menuitemcheckbox", { name: groceriesCategory }).click()
     const filtered = await (await filteredResponsePromise).json()
 
     expect(Number(filtered.current.total_expenses)).toBe(300)

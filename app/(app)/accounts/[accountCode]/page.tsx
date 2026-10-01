@@ -4,8 +4,9 @@ import { useState } from "react"
 import { useParams } from "next/navigation"
 import { endOfDay, format, startOfDay } from "date-fns"
 
-import { useAccountPageInterval } from "@/lib/accounts/use-account-page-interval"
+import { useAccountPageFilters } from "@/lib/accounts/use-account-page-filters"
 import { useAccountsQuery } from "@/lib/accounts/use-accounts"
+import { useCategoriesQuery } from "@/lib/categories/use-categories"
 import { intervalToDateRange } from "@/lib/intervals"
 import {
   SortableColumn,
@@ -14,6 +15,7 @@ import {
   type Transaction,
 } from "@/lib/transactions/queries"
 import AccountSwitcher from "@/components/accounts/account-switcher"
+import CategoryFilter from "@/components/category-filter/category-filter"
 import IntervalNav from "@/components/interval-nav/interval-nav"
 import AccountTransactionsTable from "@/components/transactions/account-transactions-table"
 import StatsTiles from "@/components/transactions/stats-tiles"
@@ -38,18 +40,19 @@ const AccountPage = () => {
   const [editedTransaction, setEditedTransaction] = useState<Transaction | undefined>(undefined)
   const [isFormOpen, setIsFormOpen] = useState(false)
 
-  const { interval, updateInterval } = useAccountPageInterval()
+  const { interval, updateInterval, includedCategories, updateIncludedCategories } = useAccountPageFilters()
   const { from, to } = intervalToDateRange(interval, new Date())
 
   const { accounts } = useAccountsQuery()
   const account = accounts.find((candidate) => candidate.code === accountCode)
+  const { categories } = useCategoriesQuery()
 
   const { transactions, isLoading } = useTransactions(
     {
       from: format(from, "yyyy-MM-dd"),
       to: format(to, "yyyy-MM-dd"),
       accountCodes: [accountCode],
-      category: "",
+      includedCategories,
       paymentMethod: "",
     },
     SORT,
@@ -64,7 +67,8 @@ const AccountPage = () => {
   const { stats } = useTransactionStats(
     accountCode,
     startOfDay(from).toISOString(),
-    endOfDay(to).toISOString()
+    endOfDay(to).toISOString(),
+    includedCategories
   )
 
   const handleNewTransaction = () => {
@@ -94,8 +98,13 @@ const AccountPage = () => {
         </div>
       </header>
 
-      <div className="flex flex-wrap items-center gap-3 rounded-[3px] border border-border bg-card px-4 py-3">
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-[3px] border border-border bg-card px-4 py-3">
         <IntervalNav interval={interval} onIntervalChange={updateInterval} />
+        <CategoryFilter
+          categories={categories}
+          includedCategories={includedCategories}
+          onIncludedCategoriesChange={updateIncludedCategories}
+        />
       </div>
 
       <StatsTiles stats={stats} />

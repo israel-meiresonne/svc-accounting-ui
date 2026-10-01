@@ -19,7 +19,7 @@ function wrapper({ children }: { children: ReactNode }) {
 
 const FILTERS: StatisticsFilters = {
   accountCodes: ["acc_1"],
-  category: "rent",
+  includedCategories: ["rent", "fees"],
   paymentMethod: "cash",
   interval: { kind: "month", offset: 0 },
 }
@@ -82,7 +82,7 @@ describe("useStatistics", () => {
         from: "2026-08-01",
         to: "2026-08-31",
         account_codes: ["acc_1"],
-        category: "rent",
+        included_categories: ["rent", "fees"],
         payment_method: "cash",
       },
     })
@@ -110,14 +110,14 @@ describe("useStatistics", () => {
     expect(result.current.statistics.current.dailyTotals).toEqual([])
   })
 
-  it("omits account_codes/category/payment_method from the request when unset", async () => {
+  it("omits account_codes/included_categories/payment_method from the request when unset", async () => {
     mockedGet.mockResolvedValue({ data: RESPONSE_DATA })
 
     renderHook(
       () =>
         useStatistics({
           accountCodes: [],
-          category: null,
+          includedCategories: [],
           paymentMethod: null,
           interval: { kind: "month", offset: 0 },
         }),
@@ -128,7 +128,7 @@ describe("useStatistics", () => {
 
     const params = mockedGet.mock.calls[0][1].params
     expect(params.account_codes).toBeUndefined()
-    expect(params.category).toBeUndefined()
+    expect(params.included_categories).toBeUndefined()
     expect(params.payment_method).toBeUndefined()
   })
 })

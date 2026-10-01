@@ -22,3 +22,18 @@ if (!Element.prototype.releasePointerCapture) {
 if (!Element.prototype.scrollIntoView) {
   Element.prototype.scrollIntoView = () => {}
 }
+
+/**
+ * Floating UI (behind every Radix popper: `DropdownMenu`, `Select`, ...)
+ * asks each element `matches(":popover-open")` / `matches(":modal")` to
+ * detect the browser's top layer. jsdom does not know those pseudo-classes,
+ * so its selector engine falls back to a very slow failure path on every
+ * call, which made each open dropdown cost ~10s of a test. Neither state
+ * can occur in jsdom, so answer `false` straight away.
+ */
+const TOP_LAYER_PSEUDO_CLASSES = new Set([":popover-open", ":modal"])
+const nativeMatches = Element.prototype.matches
+
+Element.prototype.matches = function matches(selector: string) {
+  return TOP_LAYER_PSEUDO_CLASSES.has(selector) ? false : nativeMatches.call(this, selector)
+}
