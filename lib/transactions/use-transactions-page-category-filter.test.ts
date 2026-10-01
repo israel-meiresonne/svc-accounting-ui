@@ -48,6 +48,6 @@ describe("useTransactionsPageCategoryFilter", () => {
 
     result.current.updateIncludedCategories([])
 
-    expect(mockReplace).toHaveBeenCalledWith("/transactions?")
+    expect(mockReplace).toHaveBeenCalledWith("/transactions")
   })
 })

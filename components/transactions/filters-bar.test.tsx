@@ -76,9 +76,11 @@ describe("<FiltersBar /> category filter", () => {
     await user.click(screen.getByRole("button", { name: "All categories" }))
     await user.click(screen.getByRole("menuitemcheckbox", { name: "Transfers" }))
 
-    expect(onFiltersChange).toHaveBeenCalledWith(
-      expect.objectContaining({ accountCodes: ["acc_1"], paymentMethod: "cash" })
-    )
+    expect(onFiltersChange).toHaveBeenCalledWith({
+      accountCodes: ["acc_1"],
+      includedCategories: ["Transfers"],
+      paymentMethod: "cash",
+    })
   })
 
   it("no longer renders the free-text category input", () => {

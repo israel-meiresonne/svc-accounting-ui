@@ -23,7 +23,8 @@ export function useTransactionsPageCategoryFilter() {
   // view, it is not a page the back button should have to walk back out of.
   const updateIncludedCategories = (next: string[]) => {
     const params = setIncludedCategories(new URLSearchParams(searchParams.toString()), next)
-    router.replace(`${pathname}?${params.toString()}`)
+    const query = params.toString()
+    router.replace(query === "" ? pathname : `${pathname}?${query}`)
   }
 
   return { includedCategories, updateIncludedCategories }
