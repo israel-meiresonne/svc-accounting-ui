@@ -9,22 +9,17 @@ import { intervalToSearchParams, parseIntervalParams, type Interval } from "@/li
  * Reads and writes the Account page's selected interval and category
  * filter, entirely from the URL query string (`?interval=week&offset=-2
  * &included_categories=Rent,Fees`, or `?interval=custom&from=...&to=...`),
- * never local component state — this is the one place
- * `useSearchParams`/`useRouter`/`usePathname` get called for this page, per
- * `code-style-frontend-react-next`'s "wrap URL state in a small custom
- * hook" rule, mirroring `useStatisticsFilters`. The parsing and
- * serializing themselves stay in `lib/intervals` and
- * `lib/categories/included-categories-param`, shared with every other
- * page that keeps those in the URL; this hook only binds them to the
- * router.
+ * never local component state. The parsing and serializing stay in
+ * `lib/intervals` and `lib/categories/included-categories-param`, shared
+ * with every other page that keeps those in the URL.
  *
  * The `accountCode` in the path is deliberately *not* read here: it is a
  * route param the page takes from `useParams`, not query state. What this
  * hook does own on that front is `goToAccount`, the account switcher's
  * "same view, other account" navigation — the whole current query string
  * is carried over verbatim, so both the interval and the selected
- * categories survive the switch instead of resetting to the default, and
- * no caller has to know which params the page happens to keep there.
+ * categories survive the switch, and no caller has to know which params
+ * the page happens to keep there.
  */
 export function useAccountPageFilters() {
   const searchParams = useSearchParams()

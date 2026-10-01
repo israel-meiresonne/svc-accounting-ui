@@ -16,6 +16,30 @@ type CategoryFilterProps = {
   onIncludedCategoriesChange: (next: string[]) => void
 }
 
+type BulkActionsProps = {
+  categories: string[]
+  onIncludedCategoriesChange: (next: string[]) => void
+}
+
+const BulkActions = ({ categories, onIncludedCategoriesChange }: BulkActionsProps) => (
+  <div className="flex items-center justify-between px-2 pb-1 text-xs">
+    <button
+      type="button"
+      className="text-accent-bright hover:underline"
+      onClick={() => onIncludedCategoriesChange(categories)}
+    >
+      Select all
+    </button>
+    <button
+      type="button"
+      className="text-accent-bright hover:underline"
+      onClick={() => onIncludedCategoriesChange([])}
+    >
+      Reset
+    </button>
+  </div>
+)
+
 /**
  * Presentational multi-select over every known category. Nothing checked
  * means no filter; checking narrows the view to just the checked ones —
@@ -35,7 +59,7 @@ const CategoryFilter = ({ categories, includedCategories, onIncludedCategoriesCh
 
   // Radix closes the menu on item selection by default; toggling several
   // categories in one go needs it to stay open.
-  const keepMenuOpen = (event: Event) => event.preventDefault()
+  const handleItemSelect = (event: Event) => event.preventDefault()
 
   return (
     <DropdownMenu>
@@ -46,22 +70,7 @@ const CategoryFilter = ({ categories, includedCategories, onIncludedCategoriesCh
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuLabel>Categories</DropdownMenuLabel>
-        <div className="flex items-center justify-between px-2 pb-1 text-xs">
-          <button
-            type="button"
-            className="text-accent-bright hover:underline"
-            onClick={() => onIncludedCategoriesChange(categories)}
-          >
-            Select all
-          </button>
-          <button
-            type="button"
-            className="text-accent-bright hover:underline"
-            onClick={() => onIncludedCategoriesChange([])}
-          >
-            Reset
-          </button>
-        </div>
+        <BulkActions categories={categories} onIncludedCategoriesChange={onIncludedCategoriesChange} />
         <DropdownMenuSeparator />
         {categories.length === 0 ? (
           <DropdownMenuLabel className="font-normal text-muted-foreground">No categories yet</DropdownMenuLabel>
@@ -71,7 +80,7 @@ const CategoryFilter = ({ categories, includedCategories, onIncludedCategoriesCh
               key={category}
               checked={includedCategories.includes(category)}
               onCheckedChange={(checked) => handleToggle(category, checked)}
-              onSelect={keepMenuOpen}
+              onSelect={handleItemSelect}
             >
               {category}
             </DropdownMenuCheckboxItem>
