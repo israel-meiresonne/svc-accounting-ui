@@ -1,48 +1,35 @@
 "use client"
 
-import { useState } from "react"
-
 // Phase 5 (Accounts page) owns this hook; reused here the same way
 // Phase 7's `FiltersBar` already does, rather than fetching the user's
 // account list a third way.
 import { useAccountsQuery } from "@/lib/accounts/use-accounts"
+import { useCategoriesQuery } from "@/lib/categories/use-categories"
 import { useStatisticsFilters } from "@/lib/statistics/use-statistics-filters"
 import { PAYMENT_METHODS, PAYMENT_METHOD_LABELS, isPaymentMethod } from "@/lib/transactions/schemas"
+import CategoryFilter from "@/components/category-filter/category-filter"
 import IntervalNav from "@/components/interval-nav/interval-nav"
 import { Checkbox } from "@/components/ui/checkbox"
-import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 const ANY_PAYMENT_METHOD = "any"
 
 /**
- * The Statistics page's filter panel: account multi-select, category,
- * payment method, and the shared `IntervalNav`. Unlike Phase 7's
+ * The Statistics page's filter panel: account multi-select, category
+ * filter, payment method, and the shared `IntervalNav`. Unlike Phase 7's
  * `FiltersBar` (whose filters are local `useState` in `TransactionsPage`),
  * every change here goes straight into the URL query string via
  * `useStatisticsFilters`, per the phase spec (SC-26) — this component
  * takes no props and reads/writes the URL itself.
+ *
+ * The category filter has no draft/commit step: every toggle calls
+ * `updateFilters` straight away, like the account checkboxes, and
+ * `filters.includedCategories` is the displayed value on every render.
  */
 const StatisticsFilterPanel = () => {
   const { filters, updateFilters } = useStatisticsFilters()
   const { accounts } = useAccountsQuery()
-  const [categoryDraft, setCategoryDraft] = useState(filters.category ?? "")
-  // Tracks the last committed value this draft was synced from, so a
-  // change coming from outside this input (a browser back/forward
-  // navigation) can reset the draft without fighting the user's own
-  // typing — adjusted during render rather than in an effect, per
-  // React's own guidance for state derived from a prop.
-  const [lastSyncedCategory, setLastSyncedCategory] = useState(filters.category)
-
-  if (filters.category !== lastSyncedCategory) {
-    setLastSyncedCategory(filters.category)
-    setCategoryDraft(filters.category ?? "")
-  }
-
-  const handleCategoryBlur = () => {
-    const trimmed = categoryDraft.trim()
-    updateFilters({ category: trimmed.length > 0 ? trimmed : null })
-  }
+  const { categories } = useCategoriesQuery()
 
   const handleAccountToggle = (accountCode: string, checked: boolean) => {
     const nextAccountCodes = checked
@@ -81,16 +68,10 @@ const StatisticsFilterPanel = () => {
         {accounts.length === 0 ? <span className="text-sm text-muted-foreground">No accounts yet.</span> : null}
       </div>
 
-      <Input
-        value={categoryDraft}
-        onChange={(event) => setCategoryDraft(event.target.value)}
-        onBlur={handleCategoryBlur}
-        onKeyDown={(event) => {
-          if (event.key === "Enter") handleCategoryBlur()
-        }}
-        placeholder="Filter by category"
-        aria-label="Filter by category"
-        className="w-40"
+      <CategoryFilter
+        categories={categories}
+        includedCategories={filters.includedCategories}
+        onIncludedCategoriesChange={(next) => updateFilters({ includedCategories: next })}
       />
 
       <Select value={filters.paymentMethod ?? ANY_PAYMENT_METHOD} onValueChange={handlePaymentMethodChange}>

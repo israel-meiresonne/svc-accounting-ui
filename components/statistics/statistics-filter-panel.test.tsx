@@ -2,6 +2,7 @@ import { render, screen } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 
 import { useAccountsQuery } from "@/lib/accounts/use-accounts"
+import { useCategoriesQuery } from "@/lib/categories/use-categories"
 import StatisticsFilterPanel from "@/components/statistics/statistics-filter-panel"
 
 const mockPush = jest.fn()
@@ -16,8 +17,12 @@ jest.mock("next/navigation", () => ({
 jest.mock("@/lib/accounts/use-accounts", () => ({
   useAccountsQuery: jest.fn(),
 }))
+jest.mock("@/lib/categories/use-categories", () => ({
+  useCategoriesQuery: jest.fn(),
+}))
 
 const mockedUseAccountsQuery = useAccountsQuery as jest.Mock
+const mockedUseCategoriesQuery = useCategoriesQuery as jest.Mock
 
 describe("<StatisticsFilterPanel />", () => {
   beforeEach(() => {
@@ -29,16 +34,44 @@ describe("<StatisticsFilterPanel />", () => {
         { code: "acc_2", name: "US Freelance", currency: "usd" },
       ],
     })
+    mockedUseCategoriesQuery.mockReturnValue({ categories: ["Groceries", "Transfers"] })
   })
 
-  it("updates the URL once the category filter is committed", async () => {
+  it("no longer renders the free-text category input", () => {
+    render(<StatisticsFilterPanel />)
+
+    expect(screen.queryByLabelText(/filter by category/i)).not.toBeInTheDocument()
+  })
+
+  it("updates the URL's included_categories param when a category is checked", async () => {
     const user = userEvent.setup()
     render(<StatisticsFilterPanel />)
 
-    await user.type(screen.getByLabelText(/filter by category/i), "rent")
-    await user.tab()
+    await user.click(screen.getByRole("button", { name: "All categories" }))
+    await user.click(screen.getByRole("menuitemcheckbox", { name: "Transfers" }))
 
-    expect(mockPush).toHaveBeenCalledWith(expect.stringContaining("category=rent"))
+    expect(mockPush).toHaveBeenCalledWith(expect.stringContaining("included_categories=Transfers"))
+  })
+
+  it("keeps the category dropdown open after a category is checked", async () => {
+    const user = userEvent.setup()
+    render(<StatisticsFilterPanel />)
+
+    await user.click(screen.getByRole("button", { name: "All categories" }))
+    await user.click(screen.getByRole("menuitemcheckbox", { name: "Transfers" }))
+
+    expect(screen.getByRole("menuitemcheckbox", { name: "Groceries" })).toBeInTheDocument()
+  })
+
+  it("reflects a category already selected in the URL", async () => {
+    mockSearchParams = new URLSearchParams("included_categories=Transfers")
+    const user = userEvent.setup()
+    render(<StatisticsFilterPanel />)
+
+    await user.click(screen.getByRole("button", { name: "1 selected" }))
+
+    expect(screen.getByRole("menuitemcheckbox", { name: "Transfers" })).toBeChecked()
+    expect(screen.getByRole("menuitemcheckbox", { name: "Groceries" })).not.toBeChecked()
   })
 
   it("updates the URL when a payment method is selected", async () => {
