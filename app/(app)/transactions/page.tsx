@@ -6,22 +6,37 @@ import type { PaginationState, RowSelectionState, SortingState } from "@tanstack
 
 import { intervalToDateRange, type Interval } from "@/lib/intervals"
 import { SortableColumn, useTransactions } from "@/lib/transactions/queries"
+import { useTransactionsPageCategoryFilter } from "@/lib/transactions/use-transactions-page-category-filter"
 import BulkActionToolbar from "@/components/transactions/bulk-action-toolbar"
 import { columns } from "@/components/transactions/columns"
 import FiltersBar, { type TransactionsFilterValues } from "@/components/transactions/filters-bar"
 import DataTable from "@/components/data-table/data-table"
 
 const DEFAULT_INTERVAL: Interval = { kind: "month", offset: 0 }
-const DEFAULT_FILTERS: TransactionsFilterValues = { accountCodes: [], category: "", paymentMethod: "" }
+const DEFAULT_LOCAL_FILTERS: Omit<TransactionsFilterValues, "includedCategories"> = {
+  accountCodes: [],
+  paymentMethod: "",
+}
 const DEFAULT_SORTING: SortingState = [{ id: SortableColumn.OccurredAt, desc: true }]
 const DEFAULT_PAGINATION: PaginationState = { pageIndex: 0, pageSize: 10 }
 
 const TransactionsPage = () => {
   const [interval, setIntervalValue] = useState<Interval>(DEFAULT_INTERVAL)
-  const [filters, setFilters] = useState<TransactionsFilterValues>(DEFAULT_FILTERS)
+  const [localFilters, setLocalFilters] = useState(DEFAULT_LOCAL_FILTERS)
+  const { includedCategories, updateIncludedCategories } = useTransactionsPageCategoryFilter()
   const [sorting, setSorting] = useState<SortingState>(DEFAULT_SORTING)
   const [pagination, setPagination] = useState<PaginationState>(DEFAULT_PAGINATION)
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({})
+
+  const filters: TransactionsFilterValues = { ...localFilters, includedCategories }
+
+  // `FiltersBar` edits one combined object; this page is the only place
+  // that knows the category part lives in the URL and the rest in state.
+  const handleFiltersChange = (next: TransactionsFilterValues) => {
+    const { includedCategories: nextIncludedCategories, ...nextLocalFilters } = next
+    updateIncludedCategories(nextIncludedCategories)
+    setLocalFilters(nextLocalFilters)
+  }
 
   const { from, to } = intervalToDateRange(interval, new Date())
   const activeSort = sorting[0] ?? DEFAULT_SORTING[0]
@@ -31,7 +46,7 @@ const TransactionsPage = () => {
       from: format(from, "yyyy-MM-dd"),
       to: format(to, "yyyy-MM-dd"),
       accountCodes: filters.accountCodes,
-      category: filters.category,
+      includedCategories: filters.includedCategories,
       paymentMethod: filters.paymentMethod,
     },
     { column: activeSort.id as SortableColumn, order: activeSort.desc ? "desc" : "asc" },
@@ -54,7 +69,7 @@ const TransactionsPage = () => {
         </p>
       </div>
 
-      <FiltersBar interval={interval} filters={filters} onIntervalChange={setIntervalValue} onFiltersChange={setFilters} />
+      <FiltersBar interval={interval} filters={filters} onIntervalChange={setIntervalValue} onFiltersChange={handleFiltersChange} />
 
       <BulkActionToolbar
         selectedCodes={selectedCodes}

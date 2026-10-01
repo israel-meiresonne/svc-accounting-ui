@@ -228,14 +228,19 @@ test.describe("transactions", () => {
     await expect(page.getByRole("dialog")).not.toBeVisible()
 
     await page.getByRole("link", { name: "Transactions" }).click()
+    // The account page shows an "All categories" filter too, so wait for the
+    // navigation to land before reaching for it.
+    await expect(page).toHaveURL(/\/transactions$/)
     await expect(page.locator("tbody tr", { hasText: groceriesCategory })).toBeVisible()
     await expect(page.locator("tbody tr", { hasText: rentCategory })).toBeVisible()
 
-    await page.getByLabel("Filter by category").fill(groceriesCategory)
+    await page.getByRole("button", { name: "All categories" }).click()
+    await page.getByRole("menuitemcheckbox", { name: groceriesCategory }).click()
     await expect(page.locator("tbody tr", { hasText: groceriesCategory })).toBeVisible()
     await expect(page.locator("tbody tr", { hasText: rentCategory })).toHaveCount(0)
 
-    await page.getByLabel("Filter by category").fill("")
+    await page.getByRole("menuitemcheckbox", { name: groceriesCategory }).click()
+    await page.keyboard.press("Escape")
     await page.getByLabel("Filter by payment method").click()
     await page.getByRole("option", { name: "Bank transfer" }).click()
     await expect(page.locator("tbody tr", { hasText: rentCategory })).toBeVisible()

@@ -2,24 +2,24 @@
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 
+import { parseIncludedCategories, setIncludedCategories } from "@/lib/categories/included-categories-param"
 import { intervalToSearchParams, parseIntervalParams, type Interval } from "@/lib/intervals"
 import { isPaymentMethod, type PaymentMethodValue } from "@/lib/transactions/schemas"
 
 export type StatisticsFilters = {
   accountCodes: string[]
-  category: string | null
+  includedCategories: string[]
   paymentMethod: PaymentMethodValue | null
   interval: Interval
 }
 
 export function parseStatisticsFilters(searchParams: URLSearchParams): StatisticsFilters {
   const accountsParam = searchParams.get("accounts")
-  const categoryParam = searchParams.get("category")
   const paymentMethodParam = searchParams.get("payment_method")
 
   return {
     accountCodes: accountsParam ? accountsParam.split(",").filter((code) => code.length > 0) : [],
-    category: categoryParam && categoryParam.length > 0 ? categoryParam : null,
+    includedCategories: parseIncludedCategories(searchParams),
     paymentMethod: paymentMethodParam !== null && isPaymentMethod(paymentMethodParam) ? paymentMethodParam : null,
     interval: parseIntervalParams(searchParams),
   }
@@ -29,7 +29,7 @@ export function statisticsFiltersToSearchParams(filters: StatisticsFilters): URL
   const params = intervalToSearchParams(filters.interval)
 
   if (filters.accountCodes.length > 0) params.set("accounts", filters.accountCodes.join(","))
-  if (filters.category) params.set("category", filters.category)
+  setIncludedCategories(params, filters.includedCategories)
   if (filters.paymentMethod) params.set("payment_method", filters.paymentMethod)
 
   return params
@@ -37,7 +37,7 @@ export function statisticsFiltersToSearchParams(filters: StatisticsFilters): URL
 
 /**
  * Reads and writes the Statistics page's filter state, entirely from the
- * URL query string (`?accounts=...&category=...&payment_method=...
+ * URL query string (`?accounts=...&included_categories=...&payment_method=...
  * &interval=...`), never local component state — this is the one place
  * `useSearchParams`/`useRouter` get called for this feature, per
  * `code-style-frontend-react-next`'s "wrap URL state in a small custom

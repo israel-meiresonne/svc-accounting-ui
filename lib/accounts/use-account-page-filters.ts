@@ -1,0 +1,50 @@
+"use client"
+
+import { usePathname, useRouter, useSearchParams } from "next/navigation"
+
+import { parseIncludedCategories, setIncludedCategories } from "@/lib/categories/included-categories-param"
+import { intervalToSearchParams, parseIntervalParams, type Interval } from "@/lib/intervals"
+
+/**
+ * Reads and writes the Account page's selected interval and category
+ * filter, entirely from the URL query string (`?interval=week&offset=-2
+ * &included_categories=Rent,Fees`, or `?interval=custom&from=...&to=...`),
+ * never local component state. The parsing and serializing stay in
+ * `lib/intervals` and `lib/categories/included-categories-param`, shared
+ * with every other page that keeps those in the URL.
+ *
+ * The `accountCode` in the path is deliberately *not* read here: it is a
+ * route param the page takes from `useParams`, not query state. What this
+ * hook does own on that front is `goToAccount`, the account switcher's
+ * "same view, other account" navigation — the whole current query string
+ * is carried over verbatim, so both the interval and the selected
+ * categories survive the switch, and no caller has to know which params
+ * the page happens to keep there.
+ */
+export function useAccountPageFilters() {
+  const searchParams = useSearchParams()
+  const router = useRouter()
+  const pathname = usePathname()
+
+  const interval = parseIntervalParams(new URLSearchParams(searchParams.toString()))
+  const includedCategories = parseIncludedCategories(searchParams)
+
+  // `replace`, not `push`: stepping through intervals or toggling
+  // categories is refining one view, not a trail of pages the back button
+  // should have to walk back out of.
+  const replaceWith = (nextInterval: Interval, nextIncludedCategories: string[]) => {
+    const params = setIncludedCategories(intervalToSearchParams(nextInterval), nextIncludedCategories)
+    router.replace(`${pathname}?${params.toString()}`)
+  }
+
+  const updateInterval = (nextInterval: Interval) => replaceWith(nextInterval, includedCategories)
+
+  const updateIncludedCategories = (nextIncludedCategories: string[]) => replaceWith(interval, nextIncludedCategories)
+
+  const goToAccount = (accountCode: string) => {
+    const query = searchParams.toString()
+    router.push(`/accounts/${accountCode}${query === "" ? "" : `?${query}`}`)
+  }
+
+  return { interval, updateInterval, includedCategories, updateIncludedCategories, goToAccount }
+}

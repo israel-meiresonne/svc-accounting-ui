@@ -1,14 +1,14 @@
 "use client"
 
-import type { ChangeEvent } from "react"
-
 // Phase 5 (Accounts page) owns this hook. `FiltersBar`'s account
 // multi-select and `MoveDialog`'s destination picker are the only two
 // places this phase reads a user's full account list, and both reuse
 // this one hook rather than each fetching accounts their own way.
 import { useAccountsQuery } from "@/lib/accounts/use-accounts"
+import { useCategoriesQuery } from "@/lib/categories/use-categories"
 import { PAYMENT_METHODS, PAYMENT_METHOD_LABELS, type PaymentMethodValue } from "@/lib/transactions/schemas"
 import type { Interval } from "@/lib/intervals"
+import CategoryFilter from "@/components/category-filter/category-filter"
 import IntervalNav from "@/components/interval-nav/interval-nav"
 import { Button } from "@/components/ui/button"
 import {
@@ -17,14 +17,13 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 const ANY_PAYMENT_METHOD = "any"
 
 export type TransactionsFilterValues = {
   accountCodes: string[]
-  category: string
+  includedCategories: string[]
   paymentMethod: string
 }
 
@@ -37,9 +36,10 @@ type FiltersBarProps = {
 
 const FiltersBar = ({ interval, filters, onIntervalChange, onFiltersChange }: FiltersBarProps) => {
   const { accounts } = useAccountsQuery()
+  const { categories } = useCategoriesQuery()
 
-  const handleCategoryChange = (event: ChangeEvent<HTMLInputElement>) => {
-    onFiltersChange({ ...filters, category: event.target.value })
+  const handleIncludedCategoriesChange = (includedCategories: string[]) => {
+    onFiltersChange({ ...filters, includedCategories })
   }
 
   const handlePaymentMethodChange = (value: string) => {
@@ -82,12 +82,10 @@ const FiltersBar = ({ interval, filters, onIntervalChange, onFiltersChange }: Fi
         </DropdownMenuContent>
       </DropdownMenu>
 
-      <Input
-        value={filters.category}
-        onChange={handleCategoryChange}
-        placeholder="Filter by category"
-        aria-label="Filter by category"
-        className="w-40"
+      <CategoryFilter
+        categories={categories}
+        includedCategories={filters.includedCategories}
+        onIncludedCategoriesChange={handleIncludedCategoriesChange}
       />
 
       <Select
