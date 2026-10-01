@@ -141,7 +141,7 @@ export type TransactionPage = {
   pageSize: number
 }
 
-const TRANSACTIONS_QUERY_KEY = "transactions"
+export const TRANSACTIONS_QUERY_KEY = "transactions"
 
 function buildTransactionsParams(
   filters: TransactionFilters,

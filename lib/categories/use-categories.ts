@@ -3,12 +3,18 @@
 import { useQuery } from "@tanstack/react-query"
 
 import { apiClient } from "@/lib/api-client"
+import { TRANSACTIONS_QUERY_KEY } from "@/lib/transactions/queries"
 
 type CategoriesResponseDto = {
   categories: string[]
 }
 
-const CATEGORIES_QUERY_KEY = "categories"
+/**
+ * Nested under the transactions key on purpose: every transaction write
+ * already invalidates `[TRANSACTIONS_QUERY_KEY]` by prefix, and any of them
+ * can add or retire a category, so the list refreshes with no extra wiring.
+ */
+export const CATEGORIES_QUERY_KEY = [TRANSACTIONS_QUERY_KEY, "categories"] as const
 const EMPTY_CATEGORIES: string[] = []
 
 /**
@@ -20,7 +26,7 @@ const EMPTY_CATEGORIES: string[] = []
  */
 export function useCategoriesQuery() {
   const query = useQuery({
-    queryKey: [CATEGORIES_QUERY_KEY],
+    queryKey: CATEGORIES_QUERY_KEY,
     queryFn: async () => {
       const response = await apiClient.get<CategoriesResponseDto>("/transactions/categories")
       return response.data.categories

@@ -11,9 +11,10 @@ jest.mock("@/lib/api-client", () => ({
 
 const mockedGet = apiClient.get as jest.Mock
 
-function wrapper({ children }: { children: ReactNode }) {
-  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
-  return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+function createWrapper(queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })) {
+  return function Wrapper({ children }: { children: ReactNode }) {
+    return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+  }
 }
 
 describe("useCategoriesQuery", () => {
@@ -23,7 +24,7 @@ describe("useCategoriesQuery", () => {
   })
 
   it("returns the response's categories array, unwrapped", async () => {
-    const { result } = renderHook(() => useCategoriesQuery(), { wrapper })
+    const { result } = renderHook(() => useCategoriesQuery(), { wrapper: createWrapper() })
 
     await waitFor(() => expect(result.current.isLoading).toBe(false))
 
@@ -31,8 +32,19 @@ describe("useCategoriesQuery", () => {
     expect(result.current.categories).toEqual(["Groceries", "Rent"])
   })
 
+  it("reloads the list whenever transactions are invalidated, since any write can add a category", async () => {
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+    const { result } = renderHook(() => useCategoriesQuery(), { wrapper: createWrapper(queryClient) })
+    await waitFor(() => expect(result.current.categories).toEqual(["Groceries", "Rent"]))
+
+    mockedGet.mockResolvedValue({ data: { categories: ["Groceries", "Rent", "Travel"] } })
+    await queryClient.invalidateQueries({ queryKey: ["transactions"] })
+
+    await waitFor(() => expect(result.current.categories).toEqual(["Groceries", "Rent", "Travel"]))
+  })
+
   it("returns an empty array, never undefined, before the first response resolves", () => {
-    const { result } = renderHook(() => useCategoriesQuery(), { wrapper })
+    const { result } = renderHook(() => useCategoriesQuery(), { wrapper: createWrapper() })
 
     expect(result.current.categories).toEqual([])
     expect(result.current.isLoading).toBe(true)
